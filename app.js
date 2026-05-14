@@ -419,7 +419,21 @@ async function callAI(messages, lastText) {
   const sys = state.systemPrompt ||
     `Tu es ST·AI, l'assistant IA de SolutionsTechnologies™. Tu es intelligent, précis, et tu réponds toujours de manière utile et détaillée. Tu peux répondre en français ou en anglais selon la langue de l'utilisateur. Tu signales quand tu n'es pas sûr. © 2025 SolutionsTechnologies™`;
 
-  const msgs = [{ role: 'system', content: sys }, ...messages.filter(m => m.role !== 'system').map(m => ({ role: m.role, content: m.content }))];
+  const limitedMessages = messages
+  .filter(m => m.role !== 'system')
+  .slice(-12)
+  .map(m => ({
+      role: m.role,
+      content: String(m.content).slice(0, 4000)
+  }));
+
+const msgs = [
+  {
+      role: 'system',
+      content: sys.slice(0, 2000)
+  },
+  ...limitedMessages
+];
 
   if (provider === 'pollinations') {
     return await callPollinations(model, msgs);
