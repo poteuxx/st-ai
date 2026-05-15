@@ -333,14 +333,18 @@ function sendSuggestion(el) {
 ════════════════════════ */
 async function sendMessage() {
   if (state.isGenerating) return;
+  state.isGenerating = true;
+
   const input = document.getElementById('userInput');
   const text = input.value.trim();
-  if (!text) return;
+  if (!text) {
+    state.isGenerating = false;
+    return;
+  }
 
   input.value = '';
   autoResize(input);
 
-  // Ensure active chat
   if (!state.activeId) {
     const id = 'chat_' + Date.now();
     const chat = { id, title: truncate(text, 40), messages: [], created: Date.now() };
@@ -351,63 +355,73 @@ async function sendMessage() {
   }
 
   const chat = getActiveChat();
-  if (!chat) return;
+  if (!chat) {
+    state.isGenerating = false;
+    return;
+  }
 
-  // Hide welcome
   document.getElementById('welcome').classList.add('hidden');
   document.getElementById('imageGenPanel').classList.add('hidden');
 
-  // Update title from first message
   if (chat.messages.length === 0) {
     chat.title = truncate(text, 45);
     saveChats();
     renderChatList();
   }
 
-  // User message
   const userMsg = { role: 'user', content: text, time: Date.now(), id: msgId() };
   chat.messages.push(userMsg);
   renderMessage(userMsg);
 
-  // Thinking indicator
   const thinkId = 'think_' + Date.now();
   renderThinking(thinkId);
 
-  state.isGenerating = true;
   document.getElementById('sendBtn').disabled = true;
 
   try {
-    const reply = await callAI(chat.messages, text);
+    const trimmedMessages = chat.messages.slice(-20);
+
+    const reply = await callAI(trimmedMessages, text);
+
     removeThinking(thinkId);
 
     const aiMsg = {
-      role: 'assistant', content: reply,
+      role: 'assistant',
+      content: reply,
       model: localStorage.getItem('stai_modellabel') || state.model,
-      time: Date.now(), id: msgId()
+      time: Date.now(),
+      id: msgId()
     };
+
     chat.messages.push(aiMsg);
     saveChats();
     renderMessage(aiMsg);
     scrollToBottom();
 
   } catch (err) {
+
     removeThinking(thinkId);
+
     const errMsg = {
       role: 'assistant',
-      content: `⚠️ **Erreur**: ${err.message}\n\nSuggestions :\n- Vérifiez votre clé API dans les Paramètres\n- Essayez un modèle **GRATUIT** (Llama, Mixtral, Gemma)\n- Vérifiez votre connexion internet`,
+      content: `⚠️ **Erreur**: ${err.message}`,
       model: 'System',
-      time: Date.now(), id: msgId()
+      time: Date.now(),
+      id: msgId()
     };
+
     chat.messages.push(errMsg);
     saveChats();
     renderMessage(errMsg);
     scrollToBottom();
-    toast('❌ ' + err.message, 'error');
-  }
 
-  state.isGenerating = false;
-  document.getElementById('sendBtn').disabled = false;
-  input.focus();
+    toast('❌ ' + err.message, 'error');
+
+  } finally {
+    state.isGenerating = false;
+    document.getElementById('sendBtn').disabled = false;
+    input.focus();
+  }
 }
 
 /* ── CALL AI ── */
