@@ -466,18 +466,90 @@ const msgs = [
   throw new Error('Fournisseur inconnu : ' + provider);
 }
 
-async function callPollinations(model, messages) {
-  const res = await fetch('https://text.pollinations.ai/openai', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, messages, stream: false })
-  });
-  if (!res.ok) {
-    const e = await res.text();
-    throw new Error(`Pollinations.AI (${res.status}): ${e.slice(0,200)}`);
-  }
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content || '(Réponse vide)';
+async function callPollinations(model, messages)
+{
+    const controller = new AbortController();
+
+    const timeout = setTimeout(() => {
+        controller.abort();
+    }, 25000);
+
+    try
+    {
+        const response = await fetch(
+            "https://text.pollinations.ai/openai",
+            {
+                method: "POST",
+                signal: controller.signal,
+                headers:
+                {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    model: model || "openai",
+
+                    messages: messages.slice(-10),
+
+                    temperature: 0.7,
+
+                    max_tokens: 700,
+
+                    stream: false
+                })
+            }
+        );
+
+        clearTimeout(timeout);
+
+        if (!response.ok)
+        {
+            let errorText = "";
+
+            try
+            {
+                errorText = await response.text();
+            }
+            catch
+            {
+                errorText = "Unknown error";
+            }
+
+            console.error(errorText);
+
+            // FALLBACK AUTO
+            if (model !== "mistral")
+            {
+                console.warn("Fallback vers Mistral...");
+                return await callPollinations("mistral", messages);
+            }
+
+            throw new Error(
+                `Pollinations (${response.status})`
+            );
+        }
+
+        const data = await response.json();
+
+        if (!data?.choices?.[0]?.message?.content)
+        {
+            throw new Error("Réponse vide");
+        }
+
+        return data.choices[0].message.content;
+    }
+    catch (err)
+    {
+        if (err.name === "AbortError")
+        {
+            throw new Error(
+                "Timeout Pollinations (serveur trop lent)"
+            );
+        }
+
+        console.error(err);
+
+        throw err;
+    }
 }
 
 async function callGroq(model, messages, key) {
