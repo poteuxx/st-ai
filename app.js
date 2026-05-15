@@ -1067,6 +1067,7 @@ function setupKeyboardShortcuts() {
 
 function handleKey(event) {
   if (event.key === 'Enter' && !event.shiftKey) {
+    if (state.isGenerating) return;
     event.preventDefault();
     sendMessage();
   }
