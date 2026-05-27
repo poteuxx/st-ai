@@ -21,6 +21,7 @@ const state = {
   systemPrompt: localStorage.getItem('stai_sysprompt') || '',
   settings: JSON.parse(localStorage.getItem('stai_settings') || '{}'),
   isGenerating: false,
+  isStreaming: false,
   recognition: null,
   novaOpen: false,
 };
@@ -333,14 +334,9 @@ function sendSuggestion(el) {
 ════════════════════════ */
 async function sendMessage() {
   if (state.isGenerating) return;
-  state.isGenerating = true;
-
   const input = document.getElementById('userInput');
   const text = input.value.trim();
-  if (!text) {
-    state.isGenerating = false;
-    return;
-  }
+  if (!text) return;
 
   input.value = '';
   autoResize(input);
@@ -355,10 +351,7 @@ async function sendMessage() {
   }
 
   const chat = getActiveChat();
-  if (!chat) {
-    state.isGenerating = false;
-    return;
-  }
+  if (!chat) return;
 
   document.getElementById('welcome').classList.add('hidden');
   document.getElementById('imageGenPanel').classList.add('hidden');
@@ -376,194 +369,172 @@ async function sendMessage() {
   const thinkId = 'think_' + Date.now();
   renderThinking(thinkId);
 
+  state.isGenerating = true;
   document.getElementById('sendBtn').disabled = true;
 
   try {
-    const trimmedMessages = chat.messages.slice(-20);
-
-    const reply = await callAI(trimmedMessages, text);
-
-    removeThinking(thinkId);
-
+    // Initialiser le message de l'IA (vide pour le stream)
+    const aiMsgId = msgId();
+    const modelLabel = localStorage.getItem('stai_modellabel') || state.model;
     const aiMsg = {
-      role: 'assistant',
-      content: reply,
-      model: localStorage.getItem('stai_modellabel') || state.model,
-      time: Date.now(),
-      id: msgId()
+      role: 'assistant', content: '',
+      model: modelLabel,
+      time: Date.now(), id: aiMsgId
+    };
+    
+    let fullContent = '';
+    
+    // Callback pour le streaming
+    const onChunk = (chunk) => {
+      removeThinking(thinkId);
+      fullContent += chunk;
+      updateStreamingMessage(aiMsgId, fullContent, modelLabel);
     };
 
-    chat.messages.push(aiMsg);
-    saveChats();
-    renderMessage(aiMsg);
+    const reply = await callAI(chat.messages, text, onChunk);
+    
+    // Si on n'a pas streamé (certains providers), on utilise la réponse directe
+    if (fullContent === '') {
+      fullContent = reply;
+      removeThinking(thinkId);
+      renderMessage({ ...aiMsg, content: fullContent });
+    } else {
+      // Finaliser le message streamé
+      const finalMsg = { ...aiMsg, content: fullContent };
+      chat.messages.push(finalMsg);
+      saveChats();
+      // On rafraîchit avec le markdown final
+      updateStreamingMessage(aiMsgId, fullContent, modelLabel, true);
+    }
+    
     scrollToBottom();
 
   } catch (err) {
-
     removeThinking(thinkId);
-
+    console.error('ST·AI Error:', err);
     const errMsg = {
       role: 'assistant',
-      content: `⚠️ **Erreur**: ${err.message}`,
+      content: `⚠️ **Erreur System**: ${err.message}\n\n*SolutionsTechnologies Tentative Recovery...*\n- Réessayez dans quelques secondes.\n- Changez de modèle (ex: Llama sur Groq).\n- Vérifiez vos clés API.`,
       model: 'System',
-      time: Date.now(),
-      id: msgId()
+      time: Date.now(), id: msgId()
     };
-
     chat.messages.push(errMsg);
     saveChats();
     renderMessage(errMsg);
     scrollToBottom();
-
     toast('❌ ' + err.message, 'error');
-
-  } finally {
-    state.isGenerating = false;
-    document.getElementById('sendBtn').disabled = false;
-    input.focus();
   }
+
+  state.isGenerating = false;
+  document.getElementById('sendBtn').disabled = false;
+  input.focus();
+}
+
+function updateStreamingMessage(id, content, modelLabel, isFinal = false) {
+  let el = document.getElementById('msg_' + id);
+  if (!el) {
+    const area = document.getElementById('messages');
+    el = document.createElement('div');
+    el.classList.add('msg');
+    el.id = 'msg_' + id;
+    area.appendChild(el);
+  }
+  
+  const time = new Date().toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' });
+  const avatarHtml = `<div class="msg-avatar ai"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="ag${id}" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#6c63ff"/><stop offset="1" stop-color="#00d4ff"/></linearGradient></defs><circle cx="12" cy="12" r="10" stroke="url(#ag${id})" stroke-width="1.5" fill="none"/><circle cx="12" cy="12" r="4" fill="url(#ag${id})" opacity="0.9"/></svg></div>`;
+  
+  // Utiliser marked si prêt, sinon texte brut (pour la vitesse du stream)
+  const formattedContent = isFinal ? parseMarkdown(content) : content.replace(/\n/g, '<br>');
+  
+  el.innerHTML = `
+    ${avatarHtml}
+    <div class="msg-content">
+      <div class="msg-header">
+        <span class="msg-name">ST·AI</span>
+        <span class="msg-model-tag">${escHtml(modelLabel)}</span>
+        <span class="msg-time">${time}</span>
+      </div>
+      <div class="msg-text">${formattedContent}${!isFinal ? '<span class="streaming-cursor">|</span>' : ''}</div>
+      ${isFinal ? `
+        <div class="msg-actions">
+          <button class="msg-action-btn" onclick="copyMsg('${id}')">📋 Copier</button>
+          <button class="msg-action-btn" onclick="regenMsg('${id}')">🔄 Régénérer</button>
+        </div>
+      ` : ''}
+    </div>
+  `;
+  scrollToBottom();
 }
 
 /* ── CALL AI ── */
-async function callAI(messages, lastText) {
+async function callAI(messages, lastText, onChunk) {
   const provider = state.modelProvider;
   const model = state.model;
   const keys = state.apiKeys;
 
   const sys = state.systemPrompt ||
-    `Tu es ST·AI, l'assistant IA de SolutionsTechnologies™. Tu es intelligent, précis, et tu réponds toujours de manière utile et détaillée. Tu peux répondre en français ou en anglais selon la langue de l'utilisateur. Tu signales quand tu n'es pas sûr. © 2025 SolutionsTechnologies™`;
+    `Tu es ST·AI, l'assistant IA de SolutionsTechnologies™. Réponds de manière précise, utile et professionnelle en français. © 2025 SolutionsTechnologies™`;
 
-  const limitedMessages = messages
-  .filter(m => m.role !== 'system')
-  .slice(-12)
-  .map(m => ({
-      role: m.role,
-      content: String(m.content).slice(0, 4000)
-  }));
+  const msgs = [{ role: 'system', content: sys }, ...messages.filter(m => m.role !== 'system').map(m => ({ role: m.role, content: m.content }))];
 
-const msgs = [
-  {
-      role: 'system',
-      content: sys.slice(0, 2000)
-  },
-  ...limitedMessages
-];
+  // Logic pour le retry sur les modèles gratuits
+  const fetchWithRetry = async (fn, retries = 2) => {
+    try {
+      return await fn();
+    } catch (err) {
+      if (retries > 0 && err.message.includes('502')) {
+        toast('🔄 Problème serveur, tentative de reconnexion...', 'info');
+        await new Promise(r => setTimeout(r, 1000));
+        return await fetchWithRetry(fn, retries - 1);
+      }
+      throw err;
+    }
+  };
 
   if (provider === 'pollinations') {
-    return await callPollinations(model, msgs);
+    return await fetchWithRetry(() => callPollinations(model, msgs, onChunk));
   }
 
   if (provider === 'groq') {
     const key = keys.groq;
-    if (!key) throw new Error('Clé API Groq manquante. Obtenez une clé gratuite sur console.groq.com et configurez-la dans Paramètres.');
-    return await callGroq(model, msgs, key);
+    if (!key) throw new Error('Clé API Groq manquante.');
+    return await callGroq(model, msgs, key, onChunk);
   }
 
-  if (provider === 'openai') {
-    const key = keys.openai;
-    if (!key) throw new Error('Clé API OpenAI manquante. Configurez-la dans Paramètres.');
-    return await callOpenAI(model, msgs, key);
-  }
-
-  if (provider === 'anthropic') {
-    const key = keys.anthropic;
-    if (!key) throw new Error('Clé API Anthropic manquante. Configurez-la dans Paramètres.');
-    return await callAnthropic(model, msgs, key);
-  }
-
-  if (provider === 'google') {
-    const key = keys.google;
-    if (!key) throw new Error('Clé API Google AI manquante. Configurez-la dans Paramètres.');
-    return await callGemini(model, msgs, key);
-  }
+  if (provider === 'openai') return await callOpenAI(model, msgs, keys.openai, onChunk);
+  if (provider === 'anthropic') return await callAnthropic(model, msgs, keys.anthropic, onChunk);
+  if (provider === 'google') return await callGemini(model, msgs, keys.google, onChunk);
 
   throw new Error('Fournisseur inconnu : ' + provider);
 }
 
-async function callPollinations(model, messages)
-{
-    const controller = new AbortController();
+async function callPollinations(model, messages, onChunk) {
+  const res = await fetch('https://text.pollinations.ai/openai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, messages, stream: !!onChunk })
+  });
 
-    const timeout = setTimeout(() => {
-        controller.abort();
-    }, 25000);
-
-    try
-    {
-        const response = await fetch(
-            "https://text.pollinations.ai/openai",
-            {
-                method: "POST",
-                signal: controller.signal,
-                headers:
-                {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    model: model || "openai",
-
-                    messages: messages.slice(-10),
-
-                    temperature: 0.7,
-
-                    max_tokens: 700,
-
-                    stream: false
-                })
-            }
-        );
-
-        clearTimeout(timeout);
-
-        if (!response.ok)
-        {
-            let errorText = "";
-
-            try
-            {
-                errorText = await response.text();
-            }
-            catch
-            {
-                errorText = "Unknown error";
-            }
-
-            console.error(errorText);
-
-            // FALLBACK AUTO
-            if (model !== "mistral")
-            {
-                console.warn("Fallback vers Mistral...");
-                return await callPollinations("mistral", messages);
-            }
-
-            throw new Error(
-                `Pollinations (${response.status})`
-            );
-        }
-
-        const data = await response.json();
-
-        if (!data?.choices?.[0]?.message?.content)
-        {
-            throw new Error("Réponse vide");
-        }
-
-        return data.choices[0].message.content;
+  if (!res.ok) throw new Error(`Pollinations.AI (${res.status})`);
+  
+  if (onChunk) {
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+    while (!done) {
+      const { value, done: innerDone } = await reader.read();
+      done = innerDone;
+      if (value) {
+        const text = decoder.decode(value);
+        // Pollinations envoie parfois du texte brut ou du JSON streamé
+        onChunk(text);
+      }
     }
-    catch (err)
-    {
-        if (err.name === "AbortError")
-        {
-            throw new Error(
-                "Timeout Pollinations (serveur trop lent)"
-            );
-        }
+    return '';
+  }
 
-        console.error(err);
-
-        throw err;
-    }
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || '(Réponse vide)';
 }
 
 async function callGroq(model, messages, key) {
@@ -762,57 +733,17 @@ async function regenMsg(id) {
 ════════════════════════ */
 function parseMarkdown(text) {
   if (!text) return '';
+  if (typeof marked !== 'undefined') {
+    return marked.parse(text);
+  }
+  
+  // Fallback regex if library fails to load
   let html = escHtml(text);
-
-  // Code blocks
   html = html.replace(/```(\w+)?\n?([\s\S]*?)```/g, (_, lang, code) => {
-    const l = lang || 'code';
-    return `<div class="code-block"><div class="code-header"><span class="code-lang">${escHtml(l)}</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div><pre><code>${code.trim()}</code></pre></div>`;
+    return `<div class="code-block"><pre><code>${code.trim()}</code></pre></div>`;
   });
-
-  // Inline code
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-  // Headers
-  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-
-  // Bold / italic
-  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
-  html = html.replace(/_(.+?)_/g, '<em>$1</em>');
-
-  // Links
-  html = html.replace(/\[(.+?)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-
-  // Horizontal rule
-  html = html.replace(/^---$/gm, '<hr>');
-
-  // Blockquote
-  html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
-
-  // Unordered list
-  html = html.replace(/^[\*\-] (.+)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*<\/li>(\n|$))+/g, m => '<ul>' + m + '</ul>');
-
-  // Ordered list
-  html = html.replace(/^\d+\. (.+)$/gm, '<oli>$1</oli>');
-  html = html.replace(/(<oli>.*<\/oli>(\n|$))+/g, m => '<ol>' + m.replace(/<\/?o/g, '<') + '</ol>');
-
-  // Tables
-  html = html.replace(/((\|.+\|\n?)+)/g, matchTable);
-
-  // Paragraphs — wrap lines not already in a tag
-  html = html.replace(/(?<!>)\n(?!<)/g, '<br>');
-  html = html.replace(/(<br>){2,}/g, '</p><p>');
-  html = '<p>' + html + '</p>';
-  html = html.replace(/<p><\/p>/g, '');
-  html = html.replace(/<p>(<(h[1-3]|ul|ol|hr|div|blockquote|pre)[^>]*>)/g, '$1');
-  html = html.replace(/(<\/(h[1-3]|ul|ol|hr|div|blockquote|pre)>)<\/p>/g, '$1');
-
+  html = html.replace(/\n/g, '<br>');
   return html;
 }
 
@@ -1081,7 +1012,6 @@ function setupKeyboardShortcuts() {
 
 function handleKey(event) {
   if (event.key === 'Enter' && !event.shiftKey) {
-    if (state.isGenerating) return;
     event.preventDefault();
     sendMessage();
   }
