@@ -733,17 +733,40 @@ async function regenMsg(id) {
 ════════════════════════ */
 function parseMarkdown(text) {
   if (!text) return '';
+  
+  // Use marked.js if available
   if (typeof marked !== 'undefined') {
-    return marked.parse(text);
+    try {
+      return marked.parse(text);
+    } catch (e) {
+      console.error('Marked error:', e);
+    }
   }
   
-  // Fallback regex if library fails to load
+  // Fallback regex-based parser
   let html = escHtml(text);
-  html = html.replace(/```(\w+)?\n?([\s\S]*?)```/g, (_, lang, code) => {
-    return `<div class="code-block"><pre><code>${code.trim()}</code></pre></div>`;
+  
+  // Code blocks: ```lang\ncode```
+  html = html.replace(/```(?:[\w-]+)?\n?([\s\S]*?)```/g, (_, code) => {
+    return `<pre class="code-block"><code>${code.trim()}</code></pre>`;
   });
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  
+  // Inline code: `code`
+  html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+  
+  // Bold: **text**
+  html = html.replace(/\*\*([\s\S]+?)\*\*/g, '<strong>$1</strong>');
+  
+  // Italic: *text*
+  html = html.replace(/\*([\s\S]+?)\*/g, '<em>$1</em>');
+  
+  // Lists
+  html = html.replace(/^\s*[-*+]\s+(.+)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+  
+  // Line breaks
   html = html.replace(/\n/g, '<br>');
+  
   return html;
 }
 
