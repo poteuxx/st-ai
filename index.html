@@ -83,9 +83,9 @@
     <!-- MAIN -->
     <main class="main">
       <header class="topbar">
-        <button onclick="toggleSidebar()" style="padding:10px;">☰</button>
+        <button onclick="toggleSidebar()" style="padding:10px; font-size:1.2rem;">☰</button>
         
-        <div class="model-picker">
+        <div class="model-picker" id="modelPicker">
           <button class="model-btn" id="modelBtn" onclick="toggleModelMenu()">
             <div class="model-dot" id="modelDot"></div>
             <span id="modelLabel">GPT-4o (Pollinations)</span>
@@ -117,7 +117,9 @@
           </div>
         </div>
         
-        <div style="width: 40px;"></div>
+        <button class="action-btn" onclick="exportChat()" title="Exporter en JSON" style="padding:10px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        </button>
       </header>
 
       <div class="chat-area" id="chatArea">
@@ -131,25 +133,54 @@
             <div class="suggestions">
               <button class="suggestion-card" onclick="sendSuggestion(this)">📦 <span>Explique-moi le cloud computing</span></button>
               <button class="suggestion-card" onclick="sendSuggestion(this)">⚛️ <span>Comment débuter avec React en 2025 ?</span></button>
+              <button class="suggestion-card" onclick="sendSuggestion(this)">🔐 <span>Qu'est-ce que le chiffrement de bout en bout ?</span></button>
             </div>
           </div>
         </div>
 
         <div class="messages" id="messages"></div>
 
-        <!-- Image Gen (simplified for ref) -->
-        <div id="imageGenPanel" class="hidden" style="padding: 20px;">
-           <h2>🎨 Générateur d'images</h2>
-           <input type="text" id="imagePrompt" class="igp-input" style="width:100% " placeholder="Décrivez votre image...">
-           <button onclick="generateImage()" class="action-btn primary-action" style="margin-top:10px">Générer</button>
+        <!-- Image Gen Panel -->
+        <div id="imageGenPanel" class="hidden" style="padding: 40px; max-width: 840px; margin: 0 auto; width: 100%;">
+           <h2>🎨 Générateur d'images IA</h2>
+           <div class="igp-grid">
+             <div class="igp-input-group" style="grid-column: span 2;">
+               <label>Votre description (Prompt)</label>
+               <textarea id="imagePrompt" class="igp-input" rows="3" placeholder="Ex: Un astronaute sur une baleine dans l'espace, style cyberpunk..."></textarea>
+             </div>
+             <div class="igp-input-group">
+               <label>Style artistique</label>
+               <select id="imgStyle" class="igp-select">
+                 <option value="photorealistic">Photorealiste</option>
+                 <option value="digital-art">Art Digital</option>
+                 <option value="cyberpunk">Cyberpunk</option>
+                 <option value="anime">Anime</option>
+                 <option value="oil-painting">Peinture à l'huile</option>
+               </select>
+             </div>
+             <div class="igp-input-group">
+               <label>Résolution</label>
+               <select id="imgSize" class="igp-select">
+                 <option value="1024x1024">Carré (1024x1024)</option>
+                 <option value="1280x720">Large (16:9)</option>
+                 <option value="720x1280">Portrait (9:16)</option>
+               </select>
+             </div>
+           </div>
+           <button onclick="generateImage()" class="action-btn primary-action igp-btn" style="width:100%; justify-content:center; padding:16px; font-size:1rem;">Générer l'image</button>
+           
            <div id="igpResults"></div>
-           <button onclick="closeImageGen()">Retour</button>
+           
+           <button class="action-btn" onclick="closeImageGen()" style="margin-top:24px; width:100%; justify-content:center;">
+             ← Retour à la discussion
+           </button>
         </div>
       </div>
 
       <div class="input-area">
         <div class="input-wrapper">
           <div class="input-box">
+            <button class="action-btn" id="voiceBtn" onclick="toggleVoice()" style="padding:0">🎤</button>
             <textarea id="userInput" class="user-input" placeholder="Posez votre question à ST·AI..." rows="1" oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
             <button class="send-btn" id="sendBtn" onclick="sendMessage()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
@@ -160,18 +191,118 @@
     </main>
   </div>
 
-  <!-- Settings Modal (simplified) -->
+  <!-- NOVA WIDGET -->
+  <div class="nova-widget" id="novaWidget">
+    <div class="nova-badge hidden" id="novaBadge">1</div>
+    <button class="nova-btn" onclick="toggleNova()">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+      </svg>
+    </button>
+    <div class="nova-bubble hidden" id="novaBubble">
+      <div class="nova-header">
+        <div class="nova-title">✨ Nova • ST·AI Assistant</div>
+        <button onclick="closeNova()" style="opacity:0.6">✕</button>
+      </div>
+      <div class="nova-content" id="novaMessages">
+        <div class="nova-msg">Bonjour ! Je suis Nova. Comment puis-je vous aider aujourd'hui ?</div>
+        <div class="nova-grid">
+          <button class="nova-chip" onclick="novaTip('tutorial')">🎓 Tutoriel</button>
+          <button class="nova-chip" onclick="novaTip('models')">🤖 Modèles</button>
+          <button class="nova-chip" onclick="novaTip('image')">🎨 Images</button>
+          <button class="nova-chip" onclick="novaTip('shortcuts')">⌨️ Raccourcis</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TUTORIAL -->
+  <div id="tutorialOverlay" class="tutorial-overlay hidden">
+    <div class="tutorial-card">
+      <div class="tut-progress"><div class="tut-bar" id="tutSpotlight" style="width: 16%;"></div></div>
+      <div class="tut-step" id="tutStep">Étape 1 / 6</div>
+      <h2 class="tut-title" id="tutTitle">Bienvenue sur ST·AI 🎉</h2>
+      <div class="tut-text" id="tutText">Chargement...</div>
+      <div class="tut-dots" id="tutDots"></div>
+      <div class="tut-nav">
+        <button class="action-btn" id="tutPrev" onclick="tutNav(-1)">← Précédent</button>
+        <button class="action-btn primary-action" id="tutNext" onclick="tutNav(1)">Suivant →</button>
+      </div>
+      <button onclick="closeTutorial()" style="margin-top:24px; font-size:0.8rem; color:var(--text-muted)">Passer le tutoriel</button>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
   <div id="settingsModal" class="modal-overlay hidden" onclick="closeModal('settingsModal', event)">
      <div class="modal" onclick="event.stopPropagation()">
-        <h2>Configuration ST·AI</h2>
-        <div style="margin-top:20px">
-           <label>Clé API Groq (Optionnel)</label>
-           <input type="password" id="groqKey" class="key-input" style="width:100%; border:1px solid var(--border); margin-bottom:15px">
-           
-           <label>Clé API OpenAI (Optionnel)</label>
-           <input type="password" id="openaiKey" class="key-input" style="width:100%; border:1px solid var(--border); margin-bottom:20px">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px">
+          <h2>Configuration ST·AI</h2>
+          <button onclick="closeModal('settingsModal')" style="font-size:1.5rem">✕</button>
         </div>
-        <button onclick="saveSettings()" class="modal-save-btn">Appliquer</button>
+        
+        <div style="display:flex; flex-direction:column; gap:20px">
+           <div class="igp-input-group">
+             <label>Clé API Groq (Recommandé pour Llama/DeepSeek)</label>
+             <input type="password" id="groqKey" class="igp-input" placeholder="gsk_...">
+           </div>
+           
+           <div class="igp-input-group">
+             <label>Clé API OpenAI (GPT-4o Premium)</label>
+             <input type="password" id="openaiKey" class="igp-input" placeholder="sk-...">
+           </div>
+
+           <div class="igp-input-group">
+             <label>Clé API Anthropic (Claude 3.5)</label>
+             <input type="password" id="anthropicKey" class="igp-input" placeholder="sk-ant-...">
+           </div>
+
+           <div class="igp-input-group">
+             <label>Clé API Google (Gemini 2.0)</label>
+             <input type="password" id="googleKey" class="igp-input" placeholder="AIza...">
+           </div>
+
+           <div class="igp-input-group">
+             <label>Instruction Système (Comportement de l'IA)</label>
+             <textarea id="systemPrompt" class="igp-input" rows="3" placeholder="Ex: Réponds toujours de manière concise et amicale..."></textarea>
+           </div>
+
+           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+             <div class="igp-input-group">
+               <label>Thème</label>
+               <select id="themeSelect" class="igp-select" onchange="setTheme(this.value)">
+                 <option value="dark">Sombre (Standard)</option>
+                 <option value="darker">Nuit (Profond)</option>
+                 <option value="purple">Violet ST</option>
+               </select>
+             </div>
+             <div class="igp-input-group">
+               <label>Taille de Police</label>
+               <select id="fontSelect" class="igp-select" onchange="setFont(this.value)">
+                 <option value="14">Small</option>
+                 <option value="15" selected>Medium</option>
+                 <option value="16">Large</option>
+                 <option value="18">Extra Large</option>
+               </select>
+             </div>
+           </div>
+
+           <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px">
+             <div style="display:flex; align-items:center; justify-content:space-between">
+               <span>Animations fluides</span>
+               <input type="checkbox" id="animToggle" checked onchange="toggleAnimations(this.checked)">
+             </div>
+             <div style="display:flex; align-items:center; justify-content:space-between">
+               <span>Sauvegarder l'historique localement</span>
+               <input type="checkbox" id="memToggle" checked>
+             </div>
+           </div>
+        </div>
+
+        <div style="margin-top:32px; display:flex; flex-direction:column; gap:12px">
+          <button onclick="saveSettings()" class="action-btn primary-action" style="width:100%; justify-content:center; padding:12px">Appliquer les modifications</button>
+          <button onclick="exportAllChats()" class="action-btn" style="width:100%; justify-content:center;">📥 Exporter toutes les discussions</button>
+          <button onclick="clearAllChats()" class="action-btn" style="width:100%; justify-content:center; color:var(--red)">🗑️ Effacer tout l'historique</button>
+        </div>
      </div>
   </div>
 
