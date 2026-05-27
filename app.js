@@ -15,9 +15,9 @@ const state = {
   chats: JSON.parse(localStorage.getItem('stai_chats') || '[]'),
   activeId: null,
   model: localStorage.getItem('stai_model') || 'llama-3.1-8b-instant',
-  modelProvider: localStorage.getItem('stai_provider') || 'groq',
+  provider: localStorage.getItem('stai_provider') || 'groq',
   modelColor: localStorage.getItem('stai_color') || '#8b5cf6',
-  apiKeys: JSON.parse(localStorage.getItem('stai_keys') || '{}'),
+  keys: JSON.parse(localStorage.getItem('stai_keys') || '{"openai":"","anthropic":"","google":"","groq":""}'),
   systemPrompt: localStorage.getItem('stai_sysprompt') || '',
   settings: JSON.parse(localStorage.getItem('stai_settings') || '{}'),
   isGenerating: false,
@@ -198,7 +198,7 @@ function loadModel() {
   const label = localStorage.getItem('stai_modellabel') || 'Llama 3.1 8B ©Meta';
 
   state.model = modelId;
-  state.modelProvider = provider;
+  state.provider = provider;
   state.modelColor = color;
 
   document.getElementById('modelLabel').textContent = label;
@@ -478,14 +478,14 @@ function updateStreamingMessage(id, content, modelLabel, isFinal = false) {
 
 /* ── CALL AI ── */
 async function callAI(messages, lastText, onChunk) {
-  const provider = state.modelProvider;
+  const provider = state.provider;
   const model = state.model;
-  const keys = state.apiKeys;
+  const keys = state.keys;
 
   const sys = state.systemPrompt ||
     `Tu es ST·AI, l'assistant IA de SolutionsTechnologies™. Réponds de manière précise, utile et professionnelle en français. © 2025 SolutionsTechnologies™`;
 
-  const msgs = [{ role: 'system', content: sys }, ...messages.filter(m => m.role !== 'system').map(m => ({ role: m.role, content: m.content }))];
+  const msgs = [{ role: 'system', content: sys }, ...messages.map(m => ({ role: m.role, content: m.content }))];
 
   // Logic pour le retry sur les modèles gratuits
   const fetchWithRetry = async (fn, retries = 2) => {
@@ -523,14 +523,11 @@ async function callAI(messages, lastText, onChunk) {
 }
 
 async function callPollinations(model, messages, onChunk) {
-  // Map 'openai' to a more explicit model name if needed, though 'openai' is usually the default
-  const targetModel = model === 'openai' ? 'gpt-4o' : model;
-  
   const res = await fetch('https://text.pollinations.ai/openai', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ 
-      model: targetModel, 
+      model: model, 
       messages, 
       stream: !!onChunk,
       cache: false 
@@ -540,7 +537,7 @@ async function callPollinations(model, messages, onChunk) {
 
   if (!res.ok) {
     const errorBody = await res.text().catch(() => '');
-    throw new Error(`Pollinations.AI (${res.status}): ${errorBody || 'Erreur inconnue'}`);
+    throw new Error(`Erreur Pollinations (${res.status}): ${errorBody.slice(0, 50) || 'Délai dépassé ou erreur serveur'}`);
   }
   
   if (onChunk) {
