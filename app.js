@@ -28,19 +28,29 @@ const state = {
 
 /* ── MODELS CONFIG ── */
 const MODELS = {
-  'openai-gpt4omini':   { id:'gpt-4o-mini',                   provider:'openai',      color:'#10a37f', name:'GPT-4o mini ©OpenAI' },
-  'openai-gpt4o':       { id:'gpt-4o',                         provider:'openai',      color:'#10a37f', name:'GPT-4o ©OpenAI' },
-  'claude-haiku':       { id:'claude-3-haiku-20240307',        provider:'anthropic',   color:'#e8a87c', name:'Claude 3 Haiku ©Anthropic' },
-  'claude-sonnet':      { id:'claude-3-5-sonnet-20241022',     provider:'anthropic',   color:'#c5a85a', name:'Claude 3.5 Sonnet ©Anthropic' },
-  'gemini-flash':       { id:'gemini-2.0-flash',               provider:'google',      color:'#4285f4', name:'Gemini 2.0 Flash ©Google' },
-  'gemini-pro':         { id:'gemini-1.5-pro',                 provider:'google',      color:'#34a853', name:'Gemini 1.5 Pro ©Google' },
-  'llama-8b':           { id:'llama-3.1-8b-instant',           provider:'groq',        color:'#8b5cf6', name:'Llama 3.1 8B ©Meta' },
-  'llama-70b':          { id:'llama-3.3-70b-versatile',        provider:'groq',        color:'#7c3aed', name:'Llama 3.3 70B ©Meta' },
-  'mixtral':            { id:'mixtral-8x7b-32768',             provider:'groq',        color:'#f59e0b', name:'Mixtral 8×7B ©Mistral AI' },
-  'gemma':              { id:'gemma2-9b-it',                   provider:'groq',        color:'#06b6d4', name:'Gemma 2 9B ©Google' },
-  'deepseek':           { id:'deepseek-r1-distill-llama-70b',  provider:'groq',        color:'#e11d48', name:'DeepSeek R1 70B ©DeepSeek' },
-  'pollinations-gpt':   { id:'openai',                         provider:'pollinations',color:'#00d4ff', name:'GPT via Pollinations ©OpenAI' },
-  'pollinations-mis':   { id:'mistral',                        provider:'pollinations',color:'#6c63ff', name:'Mistral via Pollinations ©Mistral AI' },
+  // --- POLLINATIONS (FREE - NO KEY) ---
+  'pollinations-gpt':   { id:'openai',            provider:'pollinations', color:'#00d4ff', name:'GPT-OSS (Fast)' },
+  'pollinations-mistral':{ id:'mistral',           provider:'pollinations', color:'#6c63ff', name:'Mistral AI' },
+  'pollinations-llama': { id:'llama',             provider:'pollinations', color:'#8b5cf6', name:'Llama 3.1 (Pollinations)' },
+  'pollinations-search':{ id:'searchgpt',         provider:'pollinations', color:'#10a37f', name:'SearchGPT (Web Access)' },
+  'pollinations-qwen':  { id:'qwen',              provider:'pollinations', color:'#ff5a5f', name:'Qwen 2.5 72B' },
+  'pollinations-evil':  { id:'evil',              provider:'pollinations', color:'#ff3e3e', name:'Evil Assistant (Unfiltered)' },
+  'pollinations-unity': { id:'unity',             provider:'pollinations', color:'#000000', name:'Unity AI' },
+  
+  // --- GROQ (GSK KEY REQUIRED) ---
+  'groq-llama-70b':     { id:'llama-3.3-70b-versatile',        provider:'groq', color:'#7c3aed', name:'Llama 3.3 70B (Groq)' },
+  'groq-llama-8b':      { id:'llama-3.1-8b-instant',           provider:'groq', color:'#8b5cf6', name:'Llama 3.1 8B (Groq)' },
+  'groq-deepseek':      { id:'deepseek-r1-distill-llama-70b',  provider:'groq', color:'#e11d48', name:'DeepSeek R1 (Groq)' },
+  'groq-mixtral':       { id:'mixtral-8x7b-32768',             provider:'groq', color:'#f59e0b', name:'Mixtral 8×7B' },
+  'groq-gemma':         { id:'gemma2-9b-it',                   provider:'groq', color:'#06b6d4', name:'Gemma 2 9B' },
+
+  // --- PREMIUM (API KEYS) ---
+  'openai-gpt4o':       { id:'gpt-4o',                         provider:'openai',    color:'#10a37f', name:'GPT-4o ©OpenAI' },
+  'openai-gpt4omini':   { id:'gpt-4o-mini',                   provider:'openai',    color:'#10a37f', name:'GPT-4o mini ©OpenAI' },
+  'claude-sonnet':      { id:'claude-3-5-sonnet-20241022',     provider:'anthropic', color:'#c5a85a', name:'Claude 3.5 Sonnet' },
+  'claude-haiku':       { id:'claude-3-haiku-20240307',        provider:'anthropic', color:'#e8a87c', name:'Claude 3 Haiku' },
+  'gemini-flash':       { id:'gemini-1.5-flash',               provider:'google',    color:'#4285f4', name:'Gemini 1.5 Flash' },
+  'gemini-pro':         { id:'gemini-1.5-pro',                 provider:'google',    color:'#34a853', name:'Gemini 1.5 Pro' },
 };
 
 /* ── TUTORIAL STEPS ── */
@@ -482,10 +492,14 @@ async function callAI(messages, lastText, onChunk) {
     try {
       return await fn();
     } catch (err) {
-      if (retries > 0 && err.message.includes('502')) {
-        toast('🔄 Problème serveur, tentative de reconnexion...', 'info');
-        await new Promise(r => setTimeout(r, 1000));
-        return await fetchWithRetry(fn, retries - 1);
+      console.error('Fetch Attempt Failed:', err);
+      if (retries > 0) {
+        // Retry on 502 or NetworkError
+        if (err.message.includes('502') || err.name === 'TypeError' || err.message.includes('fetch')) {
+          toast('🔄 Problème de connexion, nouvelle tentative...', 'info');
+          await new Promise(r => setTimeout(r, 1500));
+          return await fetchWithRetry(fn, retries - 1);
+        }
       }
       throw err;
     }
@@ -509,13 +523,25 @@ async function callAI(messages, lastText, onChunk) {
 }
 
 async function callPollinations(model, messages, onChunk) {
+  // Map 'openai' to a more explicit model name if needed, though 'openai' is usually the default
+  const targetModel = model === 'openai' ? 'gpt-4o' : model;
+  
   const res = await fetch('https://text.pollinations.ai/openai', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, messages, stream: !!onChunk })
+    body: JSON.stringify({ 
+      model: targetModel, 
+      messages, 
+      stream: !!onChunk,
+      cache: false 
+    }),
+    referrerPolicy: 'no-referrer'
   });
 
-  if (!res.ok) throw new Error(`Pollinations.AI (${res.status})`);
+  if (!res.ok) {
+    const errorBody = await res.text().catch(() => '');
+    throw new Error(`Pollinations.AI (${res.status}): ${errorBody || 'Erreur inconnue'}`);
+  }
   
   if (onChunk) {
     const reader = res.body.getReader();
