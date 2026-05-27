@@ -1,632 +1,181 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ST·AI — SolutionsTechnologies Intelligence Artificielle</title>
-  <meta name="description" content="ST·AI par SolutionsTechnologies — Votre assistant IA multi-modèles gratuit et confidentiel. Propulsé par GPT-mini, Llama, Mistral, Gemma et plus encore." />
-  <meta name="author" content="SolutionsTechnologies — André, Dva.99, Antigravity" />
-  <meta property="og:title" content="ST·AI — SolutionsTechnologies IA" />
-  <meta property="og:description" content="Chat IA multi-modèles premium par SolutionsTechnologies." />
-  <meta name="theme-color" content="#0f1117" />
+  
+  <!-- SEO & Brand -->
+  <meta name="description" content="ST·AI par SolutionsTechnologies — Votre assistant IA multi-modèles gratuit. Propre, rapide, et confidentiel." />
+  <meta name="author" content="SolutionsTechnologies" />
+  <meta name="theme-color" content="#0b0d11" />
+  
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  
+  <!-- Style -->
   <link rel="stylesheet" href="style.css" />
+  
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
-  <!-- ── SPLASH SCREEN ── -->
+  <!-- SPLASH SCREEN -->
   <div id="splash" class="splash">
     <div class="splash-inner">
       <div class="splash-logo">
-        <div class="splash-icon">
-          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="lg1" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#6c63ff"/>
-                <stop offset="1" stop-color="#00d4ff"/>
-              </linearGradient>
-            </defs>
-            <circle cx="24" cy="24" r="22" stroke="url(#lg1)" stroke-width="2.5" fill="none"/>
-            <path d="M14 24 Q24 10 34 24 Q24 38 14 24Z" fill="url(#lg1)" opacity="0.85"/>
-            <circle cx="24" cy="24" r="5" fill="#fff" opacity="0.95"/>
-          </svg>
-        </div>
-        <span class="splash-brand">ST·AI</span>
+        <svg class="splash-icon" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="22" stroke="url(#lg)" stroke-width="2.5"/>
+          <path d="M14 24 Q24 10 34 24 Q24 38 14 24Z" fill="url(#lg)" opacity="0.8"/>
+          <circle cx="24" cy="24" r="5" fill="#fff"/>
+          <defs><linearGradient id="lg" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#00d4ff"/></linearGradient></defs>
+        </svg>
       </div>
-      <p class="splash-tagline">SolutionsTechnologies Intelligence Artificielle</p>
+      <span class="splash-brand">ST·AI</span>
       <div class="splash-bar"><div class="splash-fill"></div></div>
-      <p class="splash-sub">Initialisation des modèles…</p>
+      <p style="color:var(--text-muted); font-size:0.8rem; margin-top:20px;">Initialisation de l'IA...</p>
     </div>
   </div>
 
-  <!-- ── TUTORIAL OVERLAY ── -->
-  <div id="tutorialOverlay" class="tutorial-overlay hidden">
-    <div class="tutorial-backdrop"></div>
-    <div class="tutorial-modal">
-      <div class="tutorial-header">
-        <div class="tut-avatar">
-          <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="15" stroke="#6c63ff" stroke-width="1.5"/><path d="M10 20 Q16 8 22 20" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="16" cy="22" r="1.5" fill="#6c63ff"/></svg>
-        </div>
-        <div>
-          <h3 id="tutTitle">Bienvenue sur ST·AI 🎉</h3>
-          <p id="tutStep">Étape 1 / 6</p>
-        </div>
-        <button class="tut-close" onclick="closeTutorial()">✕</button>
-      </div>
-      <div class="tutorial-spotlight" id="tutSpotlight"></div>
-      <div class="tutorial-content">
-        <p id="tutText">Bienvenue sur <strong>ST·AI</strong> par SolutionsTechnologies ! Je suis <strong>Nova</strong>, votre assistante IA. Laissez-moi vous faire une visite guidée de toutes les fonctionnalités disponibles.</p>
-      </div>
-      <div class="tutorial-nav">
-        <button class="tut-btn secondary" id="tutPrev" onclick="tutNav(-1)">← Précédent</button>
-        <div class="tut-dots" id="tutDots"></div>
-        <button class="tut-btn primary" id="tutNext" onclick="tutNav(1)">Suivant →</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── MAIN APP ── -->
   <div class="app" id="app">
-
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="brand">
-          <div class="brand-icon">
-            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="bGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                  <stop stop-color="#6c63ff"/>
-                  <stop offset="1" stop-color="#00d4ff"/>
-                </linearGradient>
-              </defs>
-              <circle cx="16" cy="16" r="14" stroke="url(#bGrad)" stroke-width="2" fill="none"/>
-              <path d="M9 16 Q16 7 23 16 Q16 25 9 16Z" fill="url(#bGrad)" opacity="0.9"/>
-              <circle cx="16" cy="16" r="3.5" fill="#fff" opacity="0.95"/>
-            </svg>
-          </div>
+          <svg class="brand-icon" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="14" stroke="url(#bg)" stroke-width="2"/>
+            <path d="M9 16 Q16 7 23 16 Q16 25 9 16Z" fill="url(#bg)" opacity="0.9"/>
+            <circle cx="16" cy="16" r="3" fill="#fff"/>
+            <defs><linearGradient id="bg" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#00d4ff"/></linearGradient></defs>
+          </svg>
           <div class="brand-text">
             <span class="brand-name">ST·AI</span>
             <span class="brand-sub">SolutionsTechnologies</span>
           </div>
         </div>
-        <button class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebar()" title="Masquer le panneau">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 19l-7-7 7-7M18 19l-7-7 7-7"/></svg>
-        </button>
       </div>
 
       <div class="sidebar-actions">
-        <button class="action-btn primary-action" onclick="newChat()" id="newChatBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-          Nouvelle discussion
+        <button class="action-btn primary-action" onclick="newChat()">
+          <span>+ Nouvelle discussion</span>
         </button>
-        <button class="action-btn" onclick="openImageGen()" id="newImageBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-          Générer une image
+        <button class="action-btn" onclick="openImageGen()">
+          <span>🎨 Créer une image</span>
         </button>
       </div>
 
-      <div class="sidebar-section">
-        <div class="section-header">
-          <span>Discussions</span>
-          <button class="icon-btn" onclick="clearAllChats()" title="Effacer tout">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-          </button>
-        </div>
-        <div class="chat-list" id="chatList">
-          <p class="empty-chats">Aucune discussion pour l'instant.<br>Commencez par poser une question !</p>
-        </div>
+      <div class="chat-list" id="chatList">
+        <!-- Chats injected via JS -->
       </div>
 
-      <div class="sidebar-footer">
-        <button class="footer-btn" onclick="openSettings()" id="settingsBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41"/></svg>
-          Paramètres
-        </button>
-        <button class="footer-btn" onclick="openCredits()" id="creditsBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-          À propos
-        </button>
-        <div class="sidebar-copy">
-          <span>© 2025 SolutionsTechnologies™</span>
-          <span class="copy-sub">Tous droits réservés</span>
+      <div style="padding: 20px; border-top: 1px solid var(--border);">
+        <button class="action-btn" onclick="openSettings()">⚙️ Paramètres</button>
+        <div style="margin-top: 12px; font-size: 0.7rem; color: var(--text-muted); text-align: center;">
+          © 2025 SolutionsTechnologies™
         </div>
       </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
-    <main class="main" id="main">
-
-      <!-- TOP BAR -->
+    <!-- MAIN -->
+    <main class="main">
       <header class="topbar">
-        <button class="topbar-menu" onclick="toggleSidebar()" id="menuBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>
-
-        <div class="model-picker" id="modelPicker">
+        <button onclick="toggleSidebar()" style="padding:10px;">☰</button>
+        
+        <div class="model-picker">
           <button class="model-btn" id="modelBtn" onclick="toggleModelMenu()">
             <div class="model-dot" id="modelDot"></div>
-            <span id="modelLabel">GPT-4o mini</span>
-            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            <span id="modelLabel">GPT-4o (Pollinations)</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
           </button>
+          
           <div class="model-menu" id="modelMenu">
-            <div class="model-menu-title">Choisir un modèle IA <span class="copy-mark">©SolutionsTechnologies</span></div>
-            <!-- OpenAI -->
-            <div class="model-group-label">OpenAI</div>
-            <button class="model-option" data-model="gpt-4o-mini" data-provider="openai" data-color="#10a37f" onclick="selectModel(this)">
-              <span class="mo-dot" style="background:#10a37f"></span>
-              <div class="mo-info">
-                <span class="mo-name">GPT-4o mini ©OpenAI</span>
-                <span class="mo-desc">Rapide · Intelligent · Gratuit</span>
-              </div>
-              <span class="mo-badge free">GRATUIT</span>
+            <div class="model-menu-title">Modèles IA <span class="copy-mark">©ST</span></div>
+            
+            <div class="model-group-label">Gratuits (Sans Clé)</div>
+            <button class="model-option" data-model="openai" data-provider="pollinations" data-color="#00d4ff" onclick="selectModel(this)">
+              <div class="mo-info"><span class="mo-name">GPT-4o (Standard)</span><span class="mo-desc">Accès libre via Pollinations</span></div>
+              <span class="mo-badge free">FREE</span>
             </button>
-            <button class="model-option" data-model="gpt-4o" data-provider="openai" data-color="#10a37f" onclick="selectModel(this)">
-              <span class="mo-dot" style="background:#10a37f"></span>
-              <div class="mo-info">
-                <span class="mo-name">GPT-4o ©OpenAI</span>
-                <span class="mo-desc">Puissant · Multimodal</span>
-              </div>
-              <span class="mo-badge key">CLÉ API</span>
+            <button class="model-option" data-model="mistral" data-provider="pollinations" data-color="#8b5cf6" onclick="selectModel(this)">
+              <div class="mo-info"><span class="mo-name">Mistral Large</span><span class="mo-desc">Performances européennes</span></div>
+              <span class="mo-badge free">FREE</span>
             </button>
-            <!-- Anthropic -->
-            <div class="model-group-label">Anthropic</div>
-            <button class="model-option" data-model="claude-3-haiku-20240307" data-provider="anthropic" data-color="#e8a87c" onclick="selectModel(this)">
-              <span class="mo-dot" style="background:#e8a87c"></span>
-              <div class="mo-info">
-                <span class="mo-name">Claude 3 Haiku ©Anthropic</span>
-                <span class="mo-desc">Ultra-rapide · Précis</span>
-              </div>
-              <span class="mo-badge key">CLÉ API</span>
-            </button>
-            <button class="model-option" data-model="claude-3-5-sonnet-20241022" data-provider="anthropic" data-color="#e8a87c" onclick="selectModel(this)">
-              <span class="mo-dot" style="background:#c5a85a"></span>
-              <div class="mo-info">
-                <span class="mo-name">Claude 3.5 Sonnet ©Anthropic</span>
-                <span class="mo-desc">Intelligent · Raisonnement avancé</span>
-              </div>
-              <span class="mo-badge key">CLÉ API</span>
-            </button>
-            <!-- Google -->
-            <div class="model-group-label">Google</div>
-            <button class="model-option" data-model="gemini-2.0-flash" data-provider="google" data-color="#4285f4" onclick="selectModel(this)">
-              <span class="mo-dot" style="background:#4285f4"></span>
-              <div class="mo-info">
-                <span class="mo-name">Gemini 2.0 Flash ©Google</span>
-                <span class="mo-desc">Rapide · Multimodal</span>
-              </div>
-              <span class="mo-badge free">GRATUIT</span>
-            </button>
-            <button class="model-option" data-model="gemini-1.5-pro" data-provider="google" data-color="#4285f4" onclick="selectModel(this)">
-              <span class="mo-dot" style="background:#34a853"></span>
-              <div class="mo-info">
-                <span class="mo-name">Gemini 1.5 Pro ©Google</span>
-                <span class="mo-desc">2M tokens · Long contexte</span>
-              </div>
-              <span class="mo-badge key">CLÉ API</span>
-            </button>
-            <!-- Meta / Open Source -->
-            <div class="model-group-label">Meta / Open Source (Gratuit)</div>
+            
+            <div class="model-group-label">Vitesse Groq (Clé Recommandée)</div>
             <button class="model-option" data-model="llama-3.1-8b-instant" data-provider="groq" data-color="#8b5cf6" onclick="selectModel(this)">
-              <span class="mo-dot" style="background:#8b5cf6"></span>
-              <div class="mo-info">
-                <span class="mo-name">Llama 3.1 8B ©Meta</span>
-                <span class="mo-desc">Open-source · Très rapide</span>
-              </div>
-              <span class="mo-badge free">GRATUIT</span>
-            </button>
-            <button class="model-option" data-model="llama-3.3-70b-versatile" data-provider="groq" data-color="#8b5cf6" onclick="selectModel(this)">
-              <span class="mo-dot" style="background:#7c3aed"></span>
-              <div class="mo-info">
-                <span class="mo-name">Llama 3.3 70B ©Meta</span>
-                <span class="mo-desc">70 milliards paramètres · Puissant</span>
-              </div>
-              <span class="mo-badge free">GRATUIT</span>
-            </button>
-            <button class="model-option" data-model="mixtral-8x7b-32768" data-provider="groq" data-color="#f59e0b" onclick="selectModel(this)">
-              <span class="mo-dot" style="background:#f59e0b"></span>
-              <div class="mo-info">
-                <span class="mo-name">Mixtral 8×7B ©Mistral AI</span>
-                <span class="mo-desc">Mixte d'experts · Multilingue</span>
-              </div>
-              <span class="mo-badge free">GRATUIT</span>
-            </button>
-            <button class="model-option" data-model="gemma2-9b-it" data-provider="groq" data-color="#06b6d4" onclick="selectModel(this)">
-              <span class="mo-dot" style="background:#06b6d4"></span>
-              <div class="mo-info">
-                <span class="mo-name">Gemma 2 9B ©Google DeepMind</span>
-                <span class="mo-desc">Léger · Efficace · Gratuit</span>
-              </div>
-              <span class="mo-badge free">GRATUIT</span>
+              <div class="mo-info"><span class="mo-name">Llama 3.1 8B</span><span class="mo-desc">Vitesse instantanée</span></div>
+              <span class="mo-badge nokey">GSK</span>
             </button>
             <button class="model-option" data-model="deepseek-r1-distill-llama-70b" data-provider="groq" data-color="#e11d48" onclick="selectModel(this)">
-              <span class="mo-dot" style="background:#e11d48"></span>
-              <div class="mo-info">
-                <span class="mo-name">DeepSeek R1 70B ©DeepSeek</span>
-                <span class="mo-desc">Raisonnement · Chain-of-thought</span>
-              </div>
-              <span class="mo-badge free">GRATUIT</span>
-            </button>
-            <!-- Pollinations (no key) -->
-            <div class="model-group-label">Via Pollinations.AI (Aucune clé)</div>
-            <button class="model-option" data-model="openai" data-provider="pollinations" data-color="#00d4ff" onclick="selectModel(this)">
-              <span class="mo-dot" style="background:#00d4ff"></span>
-              <div class="mo-info">
-                <span class="mo-name">GPT via Pollinations ©OpenAI</span>
-                <span class="mo-desc">Sans clé · Accès direct</span>
-              </div>
-              <span class="mo-badge nokey">SANS CLÉ</span>
-            </button>
-            <button class="model-option" data-model="mistral" data-provider="pollinations" data-color="#6c63ff" onclick="selectModel(this)">
-              <span class="mo-dot" style="background:#6c63ff"></span>
-              <div class="mo-info">
-                <span class="mo-name">Mistral via Pollinations ©Mistral AI</span>
-                <span class="mo-desc">Sans clé · Multilingue</span>
-              </div>
-              <span class="mo-badge nokey">SANS CLÉ</span>
+              <div class="mo-info"><span class="mo-name">DeepSeek R1</span><span class="mo-desc">Raisonnement avancé</span></div>
+              <span class="mo-badge nokey">GSK</span>
             </button>
           </div>
         </div>
-
-        <div class="topbar-right">
-          <button class="topbar-btn" onclick="exportChat()" title="Exporter la discussion">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          </button>
-          <button class="topbar-btn" onclick="openSettings()" title="Paramètres">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-          </button>
-        </div>
+        
+        <div style="width: 40px;"></div>
       </header>
 
-      <!-- CHAT AREA -->
       <div class="chat-area" id="chatArea">
-
-        <!-- WELCOME SCREEN -->
+        <!-- Welcome -->
         <div class="welcome" id="welcome">
           <div class="welcome-glow"></div>
           <div class="welcome-content">
-            <div class="welcome-logo">
-              <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <linearGradient id="wGrad" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
-                    <stop stop-color="#6c63ff"/>
-                    <stop offset="0.5" stop-color="#a78bfa"/>
-                    <stop offset="1" stop-color="#00d4ff"/>
-                  </linearGradient>
-                  <filter id="glow">
-                    <feGaussianBlur stdDeviation="4" result="blur"/>
-                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                  </filter>
-                </defs>
-                <circle cx="40" cy="40" r="36" stroke="url(#wGrad)" stroke-width="2.5" fill="none" filter="url(#glow)"/>
-                <path d="M20 40 Q40 16 60 40 Q40 64 20 40Z" fill="url(#wGrad)" opacity="0.9"/>
-                <circle cx="40" cy="40" r="8" fill="#fff" opacity="0.95"/>
-              </svg>
-            </div>
-            <h1 class="welcome-title">ST·AI par SolutionsTechnologies</h1>
-            <p class="welcome-sub">Assistant IA multi-modèles · Conversations confidentielles · Toujours gratuit</p>
-
-            <div class="welcome-models">
-              <div class="wm-chip"><span class="wm-dot" style="background:#10a37f"></span>GPT-4o mini ©OpenAI</div>
-              <div class="wm-chip"><span class="wm-dot" style="background:#8b5cf6"></span>Llama 3 ©Meta</div>
-              <div class="wm-chip"><span class="wm-dot" style="background:#f59e0b"></span>Mixtral ©Mistral AI</div>
-              <div class="wm-chip"><span class="wm-dot" style="background:#4285f4"></span>Gemini 2.0 ©Google</div>
-              <div class="wm-chip"><span class="wm-dot" style="background:#06b6d4"></span>Gemma 2 ©Google</div>
-              <div class="wm-chip"><span class="wm-dot" style="background:#e11d48"></span>DeepSeek R1 ©DeepSeek</div>
-            </div>
-
-            <div class="suggestions" id="suggestions">
-              <button class="suggestion-card" onclick="sendSuggestion(this)">
-                <span class="sg-icon">💡</span>
-                <span>Explique-moi l'intelligence artificielle générative en termes simples</span>
-              </button>
-              <button class="suggestion-card" onclick="sendSuggestion(this)">
-                <span class="sg-icon">💻</span>
-                <span>Écris une fonction Python pour trier une liste par ordre alphabétique</span>
-              </button>
-              <button class="suggestion-card" onclick="sendSuggestion(this)">
-                <span class="sg-icon">🎨</span>
-                <span>Aide-moi à créer un plan de marketing pour mon entreprise</span>
-              </button>
-              <button class="suggestion-card" onclick="sendSuggestion(this)">
-                <span class="sg-icon">📊</span>
-                <span>Quelles sont les meilleures pratiques en développement web en 2025 ?</span>
-              </button>
+            <h1 class="welcome-title">Bienvenue sur ST·AI</h1>
+            <p class="welcome-sub">L'Intelligence Artificielle de SolutionsTechnologies.</p>
+            
+            <div class="suggestions">
+              <button class="suggestion-card" onclick="sendSuggestion(this)">📦 <span>Explique-moi le cloud computing</span></button>
+              <button class="suggestion-card" onclick="sendSuggestion(this)">⚛️ <span>Comment débuter avec React en 2025 ?</span></button>
             </div>
           </div>
         </div>
 
-        <!-- MESSAGES -->
         <div class="messages" id="messages"></div>
 
-        <!-- IMAGE GEN PANEL -->
-        <div class="image-gen-panel hidden" id="imageGenPanel">
-          <div class="igp-header">
-            <h2>🎨 Génération d'images IA</h2>
-            <p class="igp-sub">Propulsé par Pollinations.AI · Sans clé API · Gratuit <span class="copy-mark">©SolutionsTechnologies</span></p>
-          </div>
-          <div class="igp-form">
-            <textarea id="imagePrompt" class="igp-input" placeholder="Décrivez l'image que vous souhaitez créer… ex: un chat futuriste dans une ville néon, style cyberpunk, 4K" rows="3"></textarea>
-            <div class="igp-options">
-              <select class="igp-select" id="imgStyle">
-                <option value="">Style automatique</option>
-                <option value="photorealistic">Photoréaliste</option>
-                <option value="digital art">Art numérique</option>
-                <option value="anime">Anime</option>
-                <option value="watercolor">Aquarelle</option>
-                <option value="oil painting">Peinture à l'huile</option>
-                <option value="cyberpunk">Cyberpunk</option>
-                <option value="minimalist">Minimaliste</option>
-              </select>
-              <select class="igp-select" id="imgSize">
-                <option value="1024x1024">1024×1024 (Carré)</option>
-                <option value="1920x1080">1920×1080 (Paysage)</option>
-                <option value="1080x1920">1080×1920 (Portrait)</option>
-              </select>
-              <button class="igp-btn" onclick="generateImage()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                Générer
-              </button>
-            </div>
-          </div>
-          <div class="igp-results" id="igpResults"></div>
-          <button class="igp-back" onclick="closeImageGen()">← Retour au chat</button>
+        <!-- Image Gen (simplified for ref) -->
+        <div id="imageGenPanel" class="hidden" style="padding: 20px;">
+           <h2>🎨 Générateur d'images</h2>
+           <input type="text" id="imagePrompt" class="igp-input" style="width:100% " placeholder="Décrivez votre image...">
+           <button onclick="generateImage()" class="action-btn primary-action" style="margin-top:10px">Générer</button>
+           <div id="igpResults"></div>
+           <button onclick="closeImageGen()">Retour</button>
         </div>
       </div>
 
-      <!-- INPUT AREA -->
-      <div class="input-area" id="inputArea">
+      <div class="input-area">
         <div class="input-wrapper">
-          <div class="input-box" id="inputBox">
-            <textarea
-              id="userInput"
-              class="user-input"
-              placeholder="Répondre à ST·AI…"
-              rows="1"
-              oninput="autoResize(this)"
-              onkeydown="handleKey(event)"
-            ></textarea>
-            <div class="input-actions">
-              <button class="inp-btn" onclick="openImageGen()" title="Générer une image" id="imgToggleBtn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-              </button>
-              <button class="inp-btn" onclick="toggleVoice()" id="voiceBtn" title="Saisie vocale">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-              </button>
-              <button class="send-btn" id="sendBtn" onclick="sendMessage()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-              </button>
-            </div>
+          <div class="input-box">
+            <textarea id="userInput" class="user-input" placeholder="Posez votre question à ST·AI..." rows="1" oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            </button>
           </div>
-        </div>
-        <div class="input-footer">
-          <span>Toutes les discussions sont <strong>confidentielles</strong> — ST·AI peut faire des erreurs. Vérifiez les informations importantes.</span>
-          <span class="input-copy">© 2025 SolutionsTechnologies™</span>
         </div>
       </div>
     </main>
   </div>
 
-  <!-- ── SETTINGS MODAL ── -->
-  <div class="modal-overlay hidden" id="settingsModal" onclick="closeModal('settingsModal', event)">
-    <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <h2>⚙️ Paramètres</h2>
-        <button class="modal-close" onclick="closeModal('settingsModal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="settings-section">
-          <h3>Clés API (optionnel)</h3>
-          <p class="settings-note">Les clés sont stockées localement dans votre navigateur. Les modèles gratuits (<span class="badge-free">GRATUIT</span> / <span class="badge-nokey">SANS CLÉ</span>) ne nécessitent aucune clé.</p>
-          <div class="api-key-row">
-            <label>OpenAI (GPT-4o, GPT-4o mini)</label>
-            <div class="key-input-wrap">
-              <input type="password" id="openaiKey" placeholder="sk-..." class="key-input" />
-              <button class="key-toggle" onclick="toggleKeyVis('openaiKey', this)">👁</button>
-            </div>
-          </div>
-          <div class="api-key-row">
-            <label>Anthropic (Claude)</label>
-            <div class="key-input-wrap">
-              <input type="password" id="anthropicKey" placeholder="sk-ant-..." class="key-input" />
-              <button class="key-toggle" onclick="toggleKeyVis('anthropicKey', this)">👁</button>
-            </div>
-          </div>
-          <div class="api-key-row">
-            <label>Google AI (Gemini)</label>
-            <div class="key-input-wrap">
-              <input type="password" id="googleKey" placeholder="AIza..." class="key-input" />
-              <button class="key-toggle" onclick="toggleKeyVis('googleKey', this)">👁</button>
-            </div>
-          </div>
-          <div class="api-key-row">
-            <label>Groq (Llama, Mixtral, Gemma — Gratuit)</label>
-            <div class="key-input-wrap">
-              <input type="password" id="groqKey" placeholder="gsk_..." class="key-input" />
-              <button class="key-toggle" onclick="toggleKeyVis('groqKey', this)">👁</button>
-            </div>
-          </div>
-          <p class="settings-note">💡 Obtenez une clé Groq gratuite sur <a href="https://console.groq.com" target="_blank" rel="noopener">console.groq.com</a></p>
+  <!-- Settings Modal (simplified) -->
+  <div id="settingsModal" class="modal-overlay hidden" onclick="closeModal('settingsModal', event)">
+     <div class="modal" onclick="event.stopPropagation()">
+        <h2>Configuration ST·AI</h2>
+        <div style="margin-top:20px">
+           <label>Clé API Groq (Optionnel)</label>
+           <input type="password" id="groqKey" class="key-input" style="width:100%; border:1px solid var(--border); margin-bottom:15px">
+           
+           <label>Clé API OpenAI (Optionnel)</label>
+           <input type="password" id="openaiKey" class="key-input" style="width:100%; border:1px solid var(--border); margin-bottom:20px">
         </div>
-
-        <div class="settings-section">
-          <h3>Personnalisation</h3>
-          <div class="setting-row">
-            <label>Langue de l'interface</label>
-            <select id="langSelect" class="setting-select">
-              <option value="fr">Français 🇫🇷🇨🇦</option>
-              <option value="en">English 🇬🇧</option>
-            </select>
-          </div>
-          <div class="setting-row">
-            <label>Thème</label>
-            <select id="themeSelect" class="setting-select" onchange="setTheme(this.value)">
-              <option value="dark">Sombre (défaut)</option>
-              <option value="darker">Ultra-sombre</option>
-              <option value="purple">Violet</option>
-            </select>
-          </div>
-          <div class="setting-row">
-            <label>Taille de police</label>
-            <select id="fontSelect" class="setting-select" onchange="setFont(this.value)">
-              <option value="14">Petite (14px)</option>
-              <option value="15" selected>Normale (15px)</option>
-              <option value="16">Grande (16px)</option>
-              <option value="18">Très grande (18px)</option>
-            </select>
-          </div>
-          <div class="setting-row">
-            <label>Animations</label>
-            <label class="toggle-switch">
-              <input type="checkbox" id="animToggle" checked onchange="toggleAnimations(this.checked)" />
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-          <div class="setting-row">
-            <label>Mémoire des discussions</label>
-            <label class="toggle-switch">
-              <input type="checkbox" id="memToggle" checked />
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <h3>Prompt système personnalisé</h3>
-          <textarea id="systemPrompt" class="sys-prompt-input" placeholder="Ex: Tu es un assistant spécialisé en développement web... Tu réponds toujours en français." rows="4"></textarea>
-        </div>
-
-        <div class="settings-section">
-          <h3>Données</h3>
-          <div class="data-btns">
-            <button class="modal-action-btn" onclick="exportAllChats()">📥 Exporter tout</button>
-            <button class="modal-action-btn danger" onclick="clearAllChats()">🗑️ Effacer l'historique</button>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="modal-save-btn" onclick="saveSettings()">Sauvegarder</button>
-      </div>
-    </div>
+        <button onclick="saveSettings()" class="modal-save-btn">Appliquer</button>
+     </div>
   </div>
 
-  <!-- ── CREDITS MODAL ── -->
-  <div class="modal-overlay hidden" id="creditsModal" onclick="closeModal('creditsModal', event)">
-    <div class="modal credits-modal" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <h2>À propos de ST·AI</h2>
-        <button class="modal-close" onclick="closeModal('creditsModal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="credits-logo">
-          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="cGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#6c63ff"/><stop offset="1" stop-color="#00d4ff"/>
-              </linearGradient>
-            </defs>
-            <circle cx="32" cy="32" r="30" stroke="url(#cGrad)" stroke-width="2.5" fill="none"/>
-            <path d="M14 32 Q32 12 50 32 Q32 52 14 32Z" fill="url(#cGrad)" opacity="0.9"/>
-            <circle cx="32" cy="32" r="6" fill="#fff" opacity="0.95"/>
-          </svg>
-        </div>
-        <h3 class="credits-app-name">ST·AI — SolutionsTechnologies</h3>
-        <p class="credits-version">Version 1.0.0 · Mai 2025</p>
-
-        <div class="credits-team">
-          <h4>Équipe de création</h4>
-          <div class="credit-person main-creator">
-            <div class="cp-avatar">A</div>
-            <div class="cp-info">
-              <span class="cp-name">André</span>
-              <span class="cp-role">Fondateur & Créateur principal · SolutionsTechnologies™</span>
-            </div>
-            <span class="cp-star">👑</span>
-          </div>
-          <div class="credit-person">
-            <div class="cp-avatar dva">D</div>
-            <div class="cp-info">
-              <span class="cp-name">Dva.99 <em>(Lord of Code)</em></span>
-              <span class="cp-role">Architecte logiciel & Designer UI/UX</span>
-            </div>
-            <span class="cp-star">🏰</span>
-          </div>
-          <div class="credit-person">
-            <div class="cp-avatar ai">AI</div>
-            <div class="cp-info">
-              <span class="cp-name">Antigravity <em>(Lord of AI)</em></span>
-              <span class="cp-role">Intelligence artificielle · Ingénieur senior HTML/CSS/JS</span>
-            </div>
-            <span class="cp-star">⚡</span>
-          </div>
-        </div>
-
-        <div class="credits-legal">
-          <div class="legal-box">
-            <h4>⚖️ Droits et marque</h4>
-            <p><strong>© 2025 SolutionsTechnologies™</strong> — Tous droits réservés.</p>
-            <p>Toute copie, reproduction ou utilisation non autorisée de la marque <strong>SolutionsTechnologies</strong> ou de son logo est <strong>strictement interdite et illégale</strong>.</p>
-            <p>La seule façon légale de s'inspirer de ce produit est de le recréer entièrement avec une <strong>marque distincte et un logo différent</strong>.</p>
-          </div>
-          <div class="legal-box disclaimer">
-            <h4>ℹ️ Avis important</h4>
-            <p>ST·AI utilise des modèles IA tiers (OpenAI ©, Anthropic ©, Google ©, Meta ©, Mistral AI ©, DeepSeek ©). Ces marques appartiennent à leurs propriétaires respectifs.</p>
-            <p>Les réponses de l'IA peuvent contenir des erreurs. Vérifiez toujours les informations critiques.</p>
-          </div>
-        </div>
-
-        <div class="credits-tech">
-          <h4>Technologies utilisées</h4>
-          <div class="tech-chips">
-            <span class="tech-chip">HTML5</span><span class="tech-chip">CSS3</span>
-            <span class="tech-chip">JavaScript ES2024</span><span class="tech-chip">Groq API</span>
-            <span class="tech-chip">OpenAI API</span><span class="tech-chip">Gemini API</span>
-            <span class="tech-chip">Pollinations.AI</span><span class="tech-chip">GitHub Pages</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── NOVA ASSISTANT WIDGET ── -->
-  <div class="nova-widget" id="novaWidget">
-    <div class="nova-bubble" id="novaBubble">
-      <div class="nova-header">
-        <div class="nova-avatar">
-          <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="#6c63ff" stroke-width="2" fill="#0f1117"/><circle cx="16" cy="16" r="6" fill="none" stroke="#00d4ff" stroke-width="1.5"/><circle cx="16" cy="16" r="2" fill="#6c63ff"/><line x1="16" y1="2" x2="16" y2="6" stroke="#6c63ff" stroke-width="1.5"/><line x1="16" y1="26" x2="16" y2="30" stroke="#6c63ff" stroke-width="1.5"/><line x1="2" y1="16" x2="6" y2="16" stroke="#00d4ff" stroke-width="1.5"/><line x1="26" y1="16" x2="30" y2="16" stroke="#00d4ff" stroke-width="1.5"/></svg>
-          <div class="nova-pulse"></div>
-        </div>
-        <div>
-          <span class="nova-name">Nova</span>
-          <span class="nova-status">Assistante ST·AI</span>
-        </div>
-        <button class="nova-close" onclick="closeNova()">✕</button>
-      </div>
-      <div class="nova-messages" id="novaMessages">
-        <div class="nova-msg">
-          <p>Bonjour ! 👋 Je suis <strong>Nova</strong>, votre assistante ST·AI.</p>
-          <p>Je peux vous aider à découvrir toutes les fonctionnalités de la plateforme.</p>
-        </div>
-      </div>
-      <div class="nova-tips" id="novaTips">
-        <button class="nova-tip" onclick="novaTip('tutorial')">🎓 Lancer le tutoriel</button>
-        <button class="nova-tip" onclick="novaTip('models')">🤖 Changer de modèle</button>
-        <button class="nova-tip" onclick="novaTip('image')">🎨 Générer une image</button>
-        <button class="nova-tip" onclick="novaTip('voice')">🎤 Saisie vocale</button>
-        <button class="nova-tip" onclick="novaTip('export')">📥 Exporter le chat</button>
-        <button class="nova-tip" onclick="novaTip('shortcuts')">⌨️ Raccourcis clavier</button>
-      </div>
-    </div>
-    <button class="nova-toggle" id="novaToggle" onclick="toggleNova()">
-      <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="url(#ng)" stroke="none"/><defs><linearGradient id="ng" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#6c63ff"/><stop offset="1" stop-color="#00d4ff"/></linearGradient></defs><circle cx="16" cy="16" r="5" fill="#fff" opacity="0.9"/><path d="M8 16 Q16 8 24 16" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.7"/></svg>
-      <div class="nova-badge" id="novaBadge">1</div>
-    </button>
-  </div>
-
-  <!-- ── TOAST NOTIFICATIONS ── -->
-  <div class="toast-container" id="toastContainer"></div>
-
+  <div id="toastContainer" class="toast-container"></div>
   <script src="app.js"></script>
 </body>
 </html>
