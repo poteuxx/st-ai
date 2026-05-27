@@ -94,26 +94,61 @@
           
           <div class="model-menu" id="modelMenu">
             <div class="model-menu-title">Modèles IA <span class="copy-mark">©ST</span></div>
-            
-            <div class="model-group-label">Gratuits (Sans Clé)</div>
+            <div class="model-menu-list">
+            <div class="model-group-label">Accès Libre (Sans Clé API)</div>
             <button class="model-option" data-model="openai" data-provider="pollinations" data-color="#00d4ff" onclick="selectModel(this)">
-              <div class="mo-info"><span class="mo-name">GPT-4o (Standard)</span><span class="mo-desc">Accès libre via Pollinations</span></div>
+              <div class="mo-info"><span class="mo-name">GPT-OSS (Fast)</span><span class="mo-desc">Le plus rapide, accès total</span></div>
               <span class="mo-badge free">FREE</span>
             </button>
-            <button class="model-option" data-model="mistral" data-provider="pollinations" data-color="#8b5cf6" onclick="selectModel(this)">
-              <div class="mo-info"><span class="mo-name">Mistral Large</span><span class="mo-desc">Performances européennes</span></div>
+            <button class="model-option" data-model="mistral" data-provider="pollinations" data-color="#6c63ff" onclick="selectModel(this)">
+              <div class="mo-info"><span class="mo-name">Mistral AI</span><span class="mo-desc">Optimisé pour le français</span></div>
+              <span class="mo-badge free">FREE</span>
+            </button>
+            <button class="model-option" data-model="llama" data-provider="pollinations" data-color="#8b5cf6" onclick="selectModel(this)">
+              <div class="mo-info"><span class="mo-name">Llama 3.1</span><span class="mo-desc">Par Meta AI - Intelligent</span></div>
+              <span class="mo-badge free">FREE</span>
+            </button>
+            <button class="model-option" data-model="searchgpt" data-provider="pollinations" data-color="#10a37f" onclick="selectModel(this)">
+              <div class="mo-info"><span class="mo-name">SearchGPT</span><span class="mo-desc">Recherche Web en temps réel</span></div>
+              <span class="mo-badge free">FREE</span>
+            </button>
+            <button class="model-option" data-model="qwen" data-provider="pollinations" data-color="#ff5a5f" onclick="selectModel(this)">
+              <div class="mo-info"><span class="mo-name">Qwen 2.5 72B</span><span class="mo-desc">Puissant modèle Alibaba</span></div>
+              <span class="mo-badge free">FREE</span>
+            </button>
+            <button class="model-option" data-model="evil" data-provider="pollinations" data-color="#ff3e3e" onclick="selectModel(this)">
+              <div class="mo-info"><span class="mo-name">Evil Assistant</span><span class="mo-desc">Sans filtrage, expérimental</span></div>
               <span class="mo-badge free">FREE</span>
             </button>
             
-            <div class="model-group-label">Vitesse Groq (Clé Recommandée)</div>
-            <button class="model-option" data-model="llama-3.1-8b-instant" data-provider="groq" data-color="#8b5cf6" onclick="selectModel(this)">
-              <div class="mo-info"><span class="mo-name">Llama 3.1 8B</span><span class="mo-desc">Vitesse instantanée</span></div>
-              <span class="mo-badge nokey">GSK</span>
+            <div class="model-group-label">Vitesse Groq (Clé GSK Requise)</div>
+            <button class="model-option" data-model="llama-3.3-70b-versatile" data-provider="groq" data-color="#7c3aed" onclick="selectModel(this)">
+              <div class="mo-info"><span class="mo-name">Llama 3.3 70B</span><span class="mo-desc">Vitesse et intelligence Groq</span></div>
+              <span class="mo-badge key">GSK</span>
             </button>
             <button class="model-option" data-model="deepseek-r1-distill-llama-70b" data-provider="groq" data-color="#e11d48" onclick="selectModel(this)">
-              <div class="mo-info"><span class="mo-name">DeepSeek R1</span><span class="mo-desc">Raisonnement avancé</span></div>
-              <span class="mo-badge nokey">GSK</span>
+              <div class="mo-info"><span class="mo-name">DeepSeek R1</span><span class="mo-desc">Raisonnement complexe (Distill)</span></div>
+              <span class="mo-badge key">GSK</span>
             </button>
+            <button class="model-option" data-model="gemma2-9b-it" data-provider="groq" data-color="#06b6d4" onclick="selectModel(this)">
+              <div class="mo-info"><span class="mo-name">Gemma 2 9B</span><span class="mo-desc">Optimisé par Google</span></div>
+              <span class="mo-badge key">GSK</span>
+            </button>
+
+            <div class="model-group-label">Premium (Clé API Perso)</div>
+            <button class="model-option" data-model="gpt-4o" data-provider="openai" data-color="#10a37f" onclick="selectModel(this)">
+              <div class="mo-info"><span class="mo-name">GPT-4o</span><span class="mo-desc">Le fleuron d'OpenAI</span></div>
+              <span class="mo-badge key">OAI</span>
+            </button>
+            <button class="model-option" data-model="claude-3-5-sonnet-20241022" data-provider="anthropic" data-color="#c5a85a" onclick="selectModel(this)">
+              <div class="mo-info"><span class="mo-name">Claude 3.5 Sonnet</span><span class="mo-desc">Excellence en code et texte</span></div>
+              <span class="mo-badge key">ANT</span>
+            </button>
+            <button class="model-option" data-model="gemini-1.5-flash" data-provider="google" data-color="#4285f4" onclick="selectModel(this)">
+              <div class="mo-info"><span class="mo-name">Gemini 1.5 Flash</span><span class="mo-desc">Rapide et multimodal</span></div>
+              <span class="mo-badge key">GGL</span>
+            </button>
+          </div>
           </div>
         </div>
         
