@@ -98,11 +98,22 @@ let tutorialStep = 0;
    INIT
 ════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
-  // Hide splash after 3s
+  // Hide splash after 1.5s
   setTimeout(() => {
     const splash = document.getElementById('splash');
-    if (splash) splash.style.display = 'none';
-  }, 3300);
+    if (splash) {
+      splash.style.opacity = '0';
+      setTimeout(() => splash.style.display = 'none', 500);
+    }
+  }, 1500);
+
+  // Force focus on input box click
+  const inputBox = document.querySelector('.input-box');
+  if (inputBox) {
+    inputBox.addEventListener('click', () => {
+      document.getElementById('userInput').focus();
+    });
+  }
 
   loadSettings();
   loadModel();
